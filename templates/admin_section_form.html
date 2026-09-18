@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Изменить раздел' if section else 'Новый раздел' }} — админ-панель{% endblock %}
+{% block content %}
+<section class="simple-head">
+  <a class="back" href="{{ url_for('admin_sections') }}">← Разделы</a>
+  <span class="eyebrow">Структура музея</span>
+  <h1>{{ 'Изменить раздел' if section else 'Новый раздел' }}</h1>
+</section>
+
+{% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
+
+<form class="admin-box editor" method="post">
+  <div class="form-grid">
+    <label>Slug
+      <input name="slug" required value="{{ section.slug if section else '' }}" placeholder="например, photo-archive">
+      <small>Латиницей. Используется в адресе страницы.</small>
+    </label>
+    <label>Родительский раздел
+      <select name="parent_slug">
+        <option value="">— главный раздел —</option>
+        {% for p in parents %}
+        <option value="{{ p.slug }}" {% if section and section.parent_slug==p.slug %}selected{% endif %}>{{ p.title }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="span2">Название
+      <input name="title" required value="{{ section.title if section else '' }}" placeholder="Название на экране">
+    </label>
+    <label>Надпись над заголовком
+      <input name="eyebrow" value="{{ section.eyebrow if section else '' }}" placeholder="Например: Жизненный путь">
+    </label>
+    <label>Порядок
+      <input type="number" name="sort_order" value="{{ section.sort_order if section else 0 }}">
+    </label>
+    <label class="span2">Изображение
+      <input name="image" value="{{ section.image if section else 'img/archive.svg' }}" placeholder="img/archive.svg">
+      <small>Путь к изображению внутри static. Загружаемые изображения для разделов можно добавить позже отдельной кнопкой.</small>
+    </label>
+    <label class="check span2">
+      <input type="checkbox" name="visible" {% if not section or section.visible %}checked{% endif %}>
+      Показывать раздел посетителям
+    </label>
+  </div>
+  <div class="form-actions">
+    <button class="primary" type="submit">Сохранить</button>
+    <a class="secondary" href="{{ url_for('admin_sections') }}">Отмена</a>
+  </div>
+</form>
+{% endblock %}
