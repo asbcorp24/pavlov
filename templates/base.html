@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#0b0c0d">
+  <title>{% block title %}Музей Фёдора Павлова{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="monogram">ФП</span>
+      <span class="brand-text"><strong>Фёдор Павлов</strong><small>история и современность</small></span>
+    </a>
+    <div class="top-actions">
+      <a href="{{ url_for('search') }}" class="touch-btn">⌕ <span>Поиск</span></a>
+      <button class="touch-btn" type="button" onclick="toggleFullscreen()">⛶ <span>Экран</span></button>
+      <a href="{{ url_for('index') }}" class="touch-btn">⌂ <span>Главная</span></a>
+    </div>
+  </header>
+
+  <main>{% block content %}{% endblock %}</main>
+
+  <footer>
+    <span>Интерактивный музей Фёдора Павлова</span>
+    <span>•</span>
+    <a href="{{ url_for('admin_login') }}">Администратор</a>
+  </footer>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
