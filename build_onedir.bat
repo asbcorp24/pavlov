@@ -45,6 +45,8 @@ python -m PyInstaller ^
 
 if errorlevel 1 goto :error
 
+copy /y "run_kiosk.bat" "dist\PavlovMuseum\run_kiosk.bat" >nul
+
 echo.
 echo ============================================
 echo BUILD COMPLETE
