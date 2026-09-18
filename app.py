@@ -1,4 +1,6 @@
 import os
+import sys
+import shutil
 import sqlite3
 import uuid
 from pathlib import Path
@@ -7,12 +9,33 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.utils import secure_filename
 
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "museum.db"
-UPLOAD_DIR = BASE_DIR / "static" / "uploads"
+IS_FROZEN = getattr(sys, "frozen", False)
+
+if IS_FROZEN:
+    DATA_DIR = Path(sys.executable).resolve().parent
+    RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", DATA_DIR))
+else:
+    DATA_DIR = Path(__file__).resolve().parent
+    RESOURCE_DIR = DATA_DIR
+
+BASE_DIR = DATA_DIR
+STATIC_DIR = DATA_DIR / "static"
+TEMPLATE_DIR = RESOURCE_DIR / "templates"
+PACKAGED_STATIC_DIR = RESOURCE_DIR / "static"
+
+if IS_FROZEN and PACKAGED_STATIC_DIR.exists():
+    STATIC_DIR.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(PACKAGED_STATIC_DIR, STATIC_DIR, dirs_exist_ok=True)
+
+DB_PATH = DATA_DIR / "museum.db"
+UPLOAD_DIR = STATIC_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=str(TEMPLATE_DIR),
+    static_folder=str(STATIC_DIR),
+)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "pavlov-museum-change-me")
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
 
@@ -458,7 +481,7 @@ def admin_delete(material_id):
         paths=[item["image"],item["audio"]]+[x["image"] for x in gallery]
         for value in paths:
             if value and value.startswith("uploads/"):
-                p=BASE_DIR/"static"/value
+                p=STATIC_DIR/value
                 if p.exists():
                     p.unlink()
         conn.execute("DELETE FROM materials WHERE id=?",(material_id,))
@@ -572,4 +595,5 @@ def not_found(_):
 init_db()
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0",port=5000,debug=True)
+    from waitress import serve
+    serve(app, host="127.0.0.1", port=5000, threads=8)
