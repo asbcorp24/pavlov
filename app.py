@@ -21,19 +21,34 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
 IMAGE_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
 AUDIO_EXT = {"mp3", "wav", "ogg", "m4a"}
 
-GROUPS = [
-    {"slug":"biography","title":"Биография","eyebrow":"Жизненный путь","image":"img/biography.svg","children":[
-        ("autobiography","Автобиография"),("bibliography","Библиография"),("chronicle","Летопись жизни и деятельности")]},
-    {"slug":"heritage","title":"Наследие","eyebrow":"Творчество и документы","image":"img/heritage.svg","children":[
-        ("literary-works","Литературные произведения"),("musical-works","Музыкальные произведения"),
-        ("journalism","Публицистика"),("letters","Письма"),("archive","Архивные материалы")]},
-    {"slug":"memory","title":"Память","eyebrow":"Павлов в культуре","image":"img/memory.svg","children":[
-        ("in-art","Фёдор Павлов в искусстве"),("in-music","Фёдор Павлов в музыке"),("in-literature","Фёдор Павлов в литературе")]},
-    {"slug":"contemporaries","title":"Современники","eyebrow":"Люди эпохи","image":"img/contemporaries.svg","children":[
-        ("stepan-maksimov","Степан Максимов"),("vasiliy-vorobyev","Василий Воробьёв"),("iosif-lyublin","Иосиф Люблин"),
-        ("sigizmund-gaber","Сигизмунд Габер"),("vladimir-krivonosov","Владимир Кривоносов"),("vladimir-ivanishin","Владимир Иванишин")]}
+DEFAULT_SECTIONS = [
+    ("biography", "Биография", "", "Жизненный путь", "img/biography.svg", 10),
+    ("autobiography", "Автобиография", "biography", "Биография", "img/biography.svg", 10),
+    ("bibliography", "Библиография", "biography", "Биография", "img/archive.svg", 20),
+    ("chronicle", "Летопись жизни и деятельности", "biography", "Биография", "img/biography.svg", 30),
+
+    ("heritage", "Наследие", "", "Творчество и документы", "img/heritage.svg", 20),
+    ("literary-works", "Литературные произведения", "heritage", "Наследие", "img/heritage.svg", 10),
+    ("musical-works", "Музыкальные произведения", "heritage", "Наследие", "img/music.svg", 20),
+    ("journalism", "Публицистика", "heritage", "Наследие", "img/archive.svg", 30),
+    ("letters", "Письма", "heritage", "Наследие", "img/archive.svg", 40),
+    ("archive", "Архивные материалы", "heritage", "Наследие", "img/archive.svg", 50),
+
+    ("memory", "Память", "", "Павлов в культуре", "img/memory.svg", 30),
+    ("in-art", "Фёдор Павлов в искусстве", "memory", "Память", "img/memory.svg", 10),
+    ("in-music", "Фёдор Павлов в музыке", "memory", "Память", "img/music.svg", 20),
+    ("in-literature", "Фёдор Павлов в литературе", "memory", "Память", "img/memory.svg", 30),
+
+    ("contemporaries", "Современники", "", "Люди эпохи", "img/contemporaries.svg", 40),
+    ("stepan-maksimov", "Степан Максимов", "contemporaries", "Современники", "img/contemporaries.svg", 10),
+    ("vasiliy-vorobyev", "Василий Воробьёв", "contemporaries", "Современники", "img/contemporaries.svg", 20),
+    ("iosif-lyublin", "Иосиф Люблин", "contemporaries", "Современники", "img/contemporaries.svg", 30),
+    ("sigizmund-gaber", "Сигизмунд Габер", "contemporaries", "Современники", "img/contemporaries.svg", 40),
+    ("vladimir-krivonosov", "Владимир Кривоносов", "contemporaries", "Современники", "img/contemporaries.svg", 50),
+    ("vladimir-ivanishin", "Владимир Иванишин", "contemporaries", "Современники", "img/contemporaries.svg", 60),
+
+    ("excursion", "Экскурсия", "", "Маршрут по музею", "img/excursion.svg", 50),
 ]
-SPECIAL = {"excursion":{"slug":"excursion","title":"Экскурсия","eyebrow":"Маршрут по музею","image":"img/excursion.svg","children":[]}}
 
 def db():
     conn = sqlite3.connect(DB_PATH)
@@ -44,6 +59,16 @@ def db():
 def init_db():
     conn = db()
     conn.executescript("""
+    CREATE TABLE IF NOT EXISTS sections(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      parent_slug TEXT DEFAULT '',
+      eyebrow TEXT DEFAULT '',
+      image TEXT DEFAULT '',
+      sort_order INTEGER DEFAULT 0,
+      visible INTEGER DEFAULT 1
+    );
     CREATE TABLE IF NOT EXISTS materials(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       section_slug TEXT NOT NULL,
@@ -66,13 +91,21 @@ def init_db():
       FOREIGN KEY(material_id) REFERENCES materials(id) ON DELETE CASCADE
     );
     """)
-    count = conn.execute("SELECT COUNT(*) n FROM materials").fetchone()["n"]
-    if count == 0:
-        seed(conn)
+    section_count = conn.execute("SELECT COUNT(*) n FROM sections").fetchone()["n"]
+    if section_count == 0:
+        conn.executemany(
+            """INSERT INTO sections(slug,title,parent_slug,eyebrow,image,sort_order)
+               VALUES(?,?,?,?,?,?)""", DEFAULT_SECTIONS
+        )
+
+    material_count = conn.execute("SELECT COUNT(*) n FROM materials").fetchone()["n"]
+    if material_count == 0:
+        seed_materials(conn)
+
     conn.commit()
     conn.close()
 
-def seed(conn):
+def seed_materials(conn):
     rows = [
       ("autobiography","Фёдор Павлович Павлов","Композитор, драматург, дирижёр, педагог и организатор культуры",
        "Фёдор Павлович Павлов родился 13 сентября 1892 года в селе Богатырёво Ядринского уезда. Он стал одним из основоположников чувашской драматургии и профессиональной музыки.\n\n"
@@ -140,44 +173,75 @@ def seed(conn):
        "Нажмите «Начать экскурсию», чтобы пройти последовательный маршрут: биография, летопись, литературное и музыкальное наследие, архив и память.",
        "img/excursion.svg","","",10,1)
     ]
-    people = [("stepan-maksimov","Степан Максимов"),("vasiliy-vorobyev","Василий Воробьёв"),
-              ("iosif-lyublin","Иосиф Люблин"),("sigizmund-gaber","Сигизмунд Габер"),
-              ("vladimir-krivonosov","Владимир Кривоносов"),("vladimir-ivanishin","Владимир Иванишин")]
+    people = [
+        ("stepan-maksimov","Степан Максимов"),("vasiliy-vorobyev","Василий Воробьёв"),
+        ("iosif-lyublin","Иосиф Люблин"),("sigizmund-gaber","Сигизмунд Габер"),
+        ("vladimir-krivonosov","Владимир Кривоносов"),("vladimir-ivanishin","Владимир Иванишин")
+    ]
     for i,(slug,name) in enumerate(people,1):
         rows.append((slug,name,"Современник Фёдора Павлова",
           "Раздел подготовлен для музейного наполнения: биография, фотографии, документы и материалы о связи этого человека с эпохой Фёдора Павлова.",
           "img/contemporaries.svg","","",i*10,0))
-    conn.executemany("""INSERT INTO materials(section_slug,title,subtitle,body,image,audio,year,sort_order,featured)
-                        VALUES(?,?,?,?,?,?,?,?,?)""", rows)
+    conn.executemany(
+        """INSERT INTO materials(section_slug,title,subtitle,body,image,audio,year,sort_order,featured)
+           VALUES(?,?,?,?,?,?,?,?,?)""", rows
+    )
+
+def get_sections():
+    conn = db()
+    rows = conn.execute("SELECT * FROM sections WHERE visible=1 ORDER BY sort_order,id").fetchall()
+    conn.close()
+    return rows
+
+def get_main_groups():
+    conn = db()
+    parents = conn.execute(
+        "SELECT * FROM sections WHERE visible=1 AND parent_slug='' ORDER BY sort_order,id"
+    ).fetchall()
+    result=[]
+    for p in parents:
+        children = conn.execute(
+            "SELECT * FROM sections WHERE visible=1 AND parent_slug=? ORDER BY sort_order,id",
+            (p["slug"],)
+        ).fetchall()
+        item=dict(p)
+        item["children"]=[(c["slug"],c["title"]) for c in children]
+        result.append(item)
+    conn.close()
+    return result
 
 def all_sections():
-    items=[]
-    for g in GROUPS:
-        items.append((g["slug"],g["title"]))
-        items.extend(g["children"])
-    items.append(("excursion","Экскурсия"))
-    return items
+    return [(r["slug"],r["title"]) for r in get_sections()]
 
 def section_info(slug):
-    for g in GROUPS:
-        if g["slug"] == slug:
-            return {**g,"parent":None}
-        for s,t in g["children"]:
-            if s == slug:
-                return {"slug":s,"title":t,"eyebrow":g["title"],"image":g["image"],"children":[],"parent":g}
-    return {**SPECIAL[slug],"parent":None} if slug in SPECIAL else None
+    conn = db()
+    row = conn.execute("SELECT * FROM sections WHERE slug=? AND visible=1",(slug,)).fetchone()
+    if not row:
+        conn.close()
+        return None
+    children = conn.execute(
+        "SELECT * FROM sections WHERE parent_slug=? AND visible=1 ORDER BY sort_order,id",(slug,)
+    ).fetchall()
+    parent = None
+    if row["parent_slug"]:
+        parent = conn.execute("SELECT * FROM sections WHERE slug=?",(row["parent_slug"],)).fetchone()
+    conn.close()
+    info=dict(row)
+    info["children"]=[(c["slug"],c["title"]) for c in children]
+    info["parent"]=dict(parent) if parent else None
+    return info
 
-def save_upload(file, kind):
+def save_upload(file,kind):
     if not file or not file.filename:
         return ""
-    ext = file.filename.rsplit(".",1)[-1].lower() if "." in file.filename else ""
-    allowed = IMAGE_EXT if kind=="image" else AUDIO_EXT
+    ext=file.filename.rsplit(".",1)[-1].lower() if "." in file.filename else ""
+    allowed=IMAGE_EXT if kind=="image" else AUDIO_EXT
     if ext not in allowed:
         raise ValueError("Недопустимый формат файла")
-    name = secure_filename(file.filename) or ("file."+ext)
-    filename = uuid.uuid4().hex[:10] + "_" + name
-    file.save(UPLOAD_DIR / filename)
-    return "uploads/" + filename
+    name=secure_filename(file.filename) or ("file."+ext)
+    filename=uuid.uuid4().hex[:10]+"_"+name
+    file.save(UPLOAD_DIR/filename)
+    return "uploads/"+filename
 
 def admin_required(fn):
     @wraps(fn)
@@ -189,40 +253,62 @@ def admin_required(fn):
 
 @app.context_processor
 def inject():
-    return {"groups":GROUPS,"special":SPECIAL}
+    return {"groups":get_main_groups()}
 
 @app.route("/")
 def index():
     conn=db()
-    featured=conn.execute("SELECT * FROM materials WHERE featured=1 ORDER BY sort_order,id LIMIT 9").fetchall()
+    featured=conn.execute(
+        "SELECT * FROM materials WHERE featured=1 ORDER BY sort_order,id LIMIT 9"
+    ).fetchall()
     conn.close()
     return render_template("index.html",featured=featured)
 
 @app.route("/section/<slug>")
 def section(slug):
     info=section_info(slug)
-    if not info: abort(404)
+    if not info:
+        abort(404)
     conn=db()
-    items=conn.execute("SELECT * FROM materials WHERE section_slug=? ORDER BY sort_order,id",(slug,)).fetchall()
+    items=conn.execute(
+        "SELECT * FROM materials WHERE section_slug=? ORDER BY sort_order,id",(slug,)
+    ).fetchall()
     conn.close()
-    return render_template("section.html",section=info,items=items)
+    template="timeline.html" if slug=="chronicle" else "section.html"
+    return render_template(template,section=info,items=items)
+
+@app.route("/music")
+def music():
+    conn=db()
+    tracks=conn.execute(
+        "SELECT * FROM materials WHERE section_slug IN ('musical-works','in-music') ORDER BY sort_order,id"
+    ).fetchall()
+    conn.close()
+    return render_template("music.html",tracks=tracks)
 
 @app.route("/material/<int:material_id>")
 def material(material_id):
     conn=db()
     item=conn.execute("SELECT * FROM materials WHERE id=?",(material_id,)).fetchone()
-    gallery=conn.execute("SELECT * FROM gallery WHERE material_id=? ORDER BY sort_order,id",(material_id,)).fetchall()
+    gallery=conn.execute(
+        "SELECT * FROM gallery WHERE material_id=? ORDER BY sort_order,id",(material_id,)
+    ).fetchall()
     conn.close()
-    if not item: abort(404)
+    if not item:
+        abort(404)
     return render_template("material.html",item=item,gallery=gallery,section=section_info(item["section_slug"]))
 
 @app.route("/tour")
 def tour():
     conn=db()
-    steps=conn.execute("""SELECT * FROM materials WHERE featured=1
-      ORDER BY CASE section_slug WHEN 'autobiography' THEN 1 WHEN 'chronicle' THEN 2
-      WHEN 'literary-works' THEN 3 WHEN 'musical-works' THEN 4 WHEN 'archive' THEN 5
-      WHEN 'in-art' THEN 6 ELSE 7 END,sort_order,id""").fetchall()
+    steps=conn.execute(
+        """SELECT * FROM materials WHERE featured=1
+           ORDER BY CASE section_slug
+             WHEN 'autobiography' THEN 1 WHEN 'chronicle' THEN 2
+             WHEN 'literary-works' THEN 3 WHEN 'musical-works' THEN 4
+             WHEN 'archive' THEN 5 WHEN 'in-art' THEN 6 ELSE 7 END,
+             sort_order,id"""
+    ).fetchall()
     conn.close()
     return render_template("tour.html",steps=steps)
 
@@ -232,8 +318,12 @@ def search():
     rows=[]
     if q:
         conn=db()
-        rows=conn.execute("""SELECT * FROM materials WHERE title LIKE ? OR subtitle LIKE ? OR body LIKE ? OR year LIKE ?
-                             ORDER BY featured DESC,sort_order,title""",tuple([f"%{q}%"]*4)).fetchall()
+        rows=conn.execute(
+            """SELECT * FROM materials
+               WHERE title LIKE ? OR subtitle LIKE ? OR body LIKE ? OR year LIKE ?
+               ORDER BY featured DESC,sort_order,title""",
+            tuple([f"%{q}%"]*4)
+        ).fetchall()
         conn.close()
     return render_template("search.html",q=q,results=rows)
 
@@ -259,11 +349,15 @@ def admin_dashboard():
     conn.close()
     return render_template("admin.html",items=items,sections=all_sections())
 
-def add_gallery_files(conn, material_id):
+def add_gallery_files(conn,material_id):
     for idx,file in enumerate(request.files.getlist("gallery_files")):
-        if not file or not file.filename: continue
+        if not file or not file.filename:
+            continue
         image=save_upload(file,"image")
-        conn.execute("INSERT INTO gallery(material_id,image,sort_order) VALUES(?,?,?)",(material_id,image,1000+idx*10))
+        conn.execute(
+            "INSERT INTO gallery(material_id,image,sort_order) VALUES(?,?,?)",
+            (material_id,image,1000+idx*10)
+        )
 
 @app.route("/admin/new",methods=["GET","POST"])
 @admin_required
@@ -273,17 +367,24 @@ def admin_new():
             image=save_upload(request.files.get("image_file"),"image")
             audio=save_upload(request.files.get("audio_file"),"audio")
         except ValueError as e:
-            flash(str(e),"danger"); return redirect(request.url)
+            flash(str(e),"danger")
+            return redirect(request.url)
         conn=db()
-        cur=conn.execute("""INSERT INTO materials(section_slug,title,subtitle,body,image,audio,year,sort_order,featured)
-                            VALUES(?,?,?,?,?,?,?,?,?)""",
-          (request.form["section_slug"],request.form["title"].strip(),request.form.get("subtitle","").strip(),
-           request.form.get("body","").strip(),image or request.form.get("image","").strip(),audio,
-           request.form.get("year","").strip(),int(request.form.get("sort_order") or 0),
-           1 if request.form.get("featured") else 0))
-        try: add_gallery_files(conn,cur.lastrowid)
-        except ValueError as e: flash(str(e),"danger")
-        conn.commit(); conn.close()
+        cur=conn.execute(
+            """INSERT INTO materials(section_slug,title,subtitle,body,image,audio,year,sort_order,featured)
+               VALUES(?,?,?,?,?,?,?,?,?)""",
+            (request.form["section_slug"],request.form["title"].strip(),
+             request.form.get("subtitle","").strip(),request.form.get("body","").strip(),
+             image or request.form.get("image","").strip(),audio,
+             request.form.get("year","").strip(),int(request.form.get("sort_order") or 0),
+             1 if request.form.get("featured") else 0)
+        )
+        try:
+            add_gallery_files(conn,cur.lastrowid)
+        except ValueError as e:
+            flash(str(e),"danger")
+        conn.commit()
+        conn.close()
         flash("Материал добавлен","success")
         return redirect(url_for("admin_dashboard"))
     return render_template("admin_form.html",item=None,gallery=[],sections=all_sections())
@@ -293,26 +394,38 @@ def admin_new():
 def admin_edit(material_id):
     conn=db()
     item=conn.execute("SELECT * FROM materials WHERE id=?",(material_id,)).fetchone()
-    if not item: conn.close(); abort(404)
+    if not item:
+        conn.close()
+        abort(404)
     if request.method=="POST":
         try:
             new_image=save_upload(request.files.get("image_file"),"image")
             new_audio=save_upload(request.files.get("audio_file"),"audio")
             add_gallery_files(conn,material_id)
         except ValueError as e:
-            conn.close(); flash(str(e),"danger"); return redirect(request.url)
+            conn.close()
+            flash(str(e),"danger")
+            return redirect(request.url)
         image=new_image or request.form.get("image","").strip() or item["image"]
         audio=new_audio or item["audio"]
-        if request.form.get("remove_audio"): audio=""
-        conn.execute("""UPDATE materials SET section_slug=?,title=?,subtitle=?,body=?,image=?,audio=?,year=?,sort_order=?,featured=?
-                        WHERE id=?""",
-          (request.form["section_slug"],request.form["title"].strip(),request.form.get("subtitle","").strip(),
-           request.form.get("body","").strip(),image,audio,request.form.get("year","").strip(),
-           int(request.form.get("sort_order") or 0),1 if request.form.get("featured") else 0,material_id))
-        conn.commit(); conn.close()
+        if request.form.get("remove_audio"):
+            audio=""
+        conn.execute(
+            """UPDATE materials SET section_slug=?,title=?,subtitle=?,body=?,image=?,audio=?,
+               year=?,sort_order=?,featured=? WHERE id=?""",
+            (request.form["section_slug"],request.form["title"].strip(),
+             request.form.get("subtitle","").strip(),request.form.get("body","").strip(),
+             image,audio,request.form.get("year","").strip(),
+             int(request.form.get("sort_order") or 0),
+             1 if request.form.get("featured") else 0,material_id)
+        )
+        conn.commit()
+        conn.close()
         flash("Изменения сохранены","success")
         return redirect(url_for("admin_dashboard"))
-    gallery=conn.execute("SELECT * FROM gallery WHERE material_id=? ORDER BY sort_order,id",(material_id,)).fetchall()
+    gallery=conn.execute(
+        "SELECT * FROM gallery WHERE material_id=? ORDER BY sort_order,id",(material_id,)
+    ).fetchall()
     conn.close()
     return render_template("admin_form.html",item=item,gallery=gallery,sections=all_sections())
 
@@ -321,13 +434,17 @@ def admin_edit(material_id):
 def admin_gallery_delete(image_id):
     conn=db()
     image=conn.execute("SELECT * FROM gallery WHERE id=?",(image_id,)).fetchone()
-    if not image: conn.close(); abort(404)
+    if not image:
+        conn.close()
+        abort(404)
     material_id=image["material_id"]
     if image["image"].startswith("uploads/"):
         p=BASE_DIR/"static"/image["image"]
-        if p.exists(): p.unlink()
+        if p.exists():
+            p.unlink()
     conn.execute("DELETE FROM gallery WHERE id=?",(image_id,))
-    conn.commit(); conn.close()
+    conn.commit()
+    conn.close()
     flash("Изображение удалено","success")
     return redirect(url_for("admin_edit",material_id=material_id))
 
@@ -342,12 +459,111 @@ def admin_delete(material_id):
         for value in paths:
             if value and value.startswith("uploads/"):
                 p=BASE_DIR/"static"/value
-                if p.exists(): p.unlink()
+                if p.exists():
+                    p.unlink()
         conn.execute("DELETE FROM materials WHERE id=?",(material_id,))
         conn.commit()
     conn.close()
     flash("Материал удалён","success")
     return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/sections")
+@admin_required
+def admin_sections():
+    conn=db()
+    rows=conn.execute("SELECT * FROM sections ORDER BY parent_slug,sort_order,id").fetchall()
+    conn.close()
+    return render_template("admin_sections.html",sections=rows)
+
+@app.route("/admin/sections/new",methods=["GET","POST"])
+@admin_required
+def admin_section_new():
+    if request.method=="POST":
+        slug=request.form.get("slug","").strip().lower()
+        title=request.form.get("title","").strip()
+        if not slug or not title:
+            flash("Нужны slug и название","danger")
+            return redirect(request.url)
+        conn=db()
+        try:
+            conn.execute(
+                """INSERT INTO sections(slug,title,parent_slug,eyebrow,image,sort_order,visible)
+                   VALUES(?,?,?,?,?,?,?)""",
+                (slug,title,request.form.get("parent_slug","").strip(),
+                 request.form.get("eyebrow","").strip(),
+                 request.form.get("image","").strip() or "img/archive.svg",
+                 int(request.form.get("sort_order") or 0),
+                 1 if request.form.get("visible") else 0)
+            )
+            conn.commit()
+        except sqlite3.IntegrityError:
+            conn.close()
+            flash("Такой slug уже существует","danger")
+            return redirect(request.url)
+        conn.close()
+        flash("Раздел добавлен","success")
+        return redirect(url_for("admin_sections"))
+    return render_template("admin_section_form.html",section=None,parents=get_main_groups())
+
+@app.route("/admin/sections/edit/<int:section_id>",methods=["GET","POST"])
+@admin_required
+def admin_section_edit(section_id):
+    conn=db()
+    row=conn.execute("SELECT * FROM sections WHERE id=?",(section_id,)).fetchone()
+    if not row:
+        conn.close()
+        abort(404)
+    if request.method=="POST":
+        old_slug=row["slug"]
+        new_slug=request.form.get("slug","").strip().lower()
+        title=request.form.get("title","").strip()
+        if not new_slug or not title:
+            conn.close()
+            flash("Нужны slug и название","danger")
+            return redirect(request.url)
+        try:
+            conn.execute(
+                """UPDATE sections SET slug=?,title=?,parent_slug=?,eyebrow=?,image=?,
+                   sort_order=?,visible=? WHERE id=?""",
+                (new_slug,title,request.form.get("parent_slug","").strip(),
+                 request.form.get("eyebrow","").strip(),
+                 request.form.get("image","").strip() or "img/archive.svg",
+                 int(request.form.get("sort_order") or 0),
+                 1 if request.form.get("visible") else 0,section_id)
+            )
+            if new_slug != old_slug:
+                conn.execute("UPDATE materials SET section_slug=? WHERE section_slug=?",(new_slug,old_slug))
+                conn.execute("UPDATE sections SET parent_slug=? WHERE parent_slug=?",(new_slug,old_slug))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            conn.close()
+            flash("Такой slug уже существует","danger")
+            return redirect(request.url)
+        conn.close()
+        flash("Раздел сохранён","success")
+        return redirect(url_for("admin_sections"))
+    conn.close()
+    return render_template("admin_section_form.html",section=row,parents=get_main_groups())
+
+@app.post("/admin/sections/delete/<int:section_id>")
+@admin_required
+def admin_section_delete(section_id):
+    conn=db()
+    row=conn.execute("SELECT * FROM sections WHERE id=?",(section_id,)).fetchone()
+    if not row:
+        conn.close()
+        abort(404)
+    used=conn.execute("SELECT COUNT(*) n FROM materials WHERE section_slug=?",(row["slug"],)).fetchone()["n"]
+    children=conn.execute("SELECT COUNT(*) n FROM sections WHERE parent_slug=?",(row["slug"],)).fetchone()["n"]
+    if used or children:
+        conn.close()
+        flash("Нельзя удалить раздел: в нём есть материалы или подразделы","danger")
+        return redirect(url_for("admin_sections"))
+    conn.execute("DELETE FROM sections WHERE id=?",(section_id,))
+    conn.commit()
+    conn.close()
+    flash("Раздел удалён","success")
+    return redirect(url_for("admin_sections"))
 
 @app.errorhandler(404)
 def not_found(_):
