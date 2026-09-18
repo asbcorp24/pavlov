@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="login-wrap">
+  <form class="admin-box login-box" method="post">
+    <div class="eyebrow">Служебный вход</div>
+    <h1>Администратор</h1>
+    {% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
+    <label>Логин<input name="username" required autocomplete="username"></label>
+    <label>Пароль<input type="password" name="password" required autocomplete="current-password"></label>
+    <button class="primary" type="submit">Войти</button>
+  </form>
+</section>
+{% endblock %}
