@@ -1,21 +1,18 @@
 {% extends "base.html" %}
 {% block title %}{{ item.title }} — музей Фёдора Павлова{% endblock %}
 {% block content %}
-<section class="detail">
-  <a class="back" href="{{ url_for('section', slug=item.section_slug) }}">← К разделу</a>
-  <div class="detail-grid">
-    <div class="detail-media">
-      <img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="{{ item.title }}">
-      {% if item.audio %}
-      <div class="player">
-        <div class="player-icon">♫</div>
-        <div class="player-copy"><small>Аудиозапись</small><b>{{ item.title }}</b></div>
-        <audio controls preload="metadata" src="{{ url_for('static', filename=item.audio) }}"></audio>
-      </div>
-      {% endif %}
+<section class="material-screen">
+  <div class="material-topline">
+    <a class="back" href="{{ url_for('section', slug=item.section_slug) }}">← К разделу</a>
+    <span class="eyebrow">{{ section.title if section else 'Экспозиция' }}</span>
+  </div>
+
+  <div class="material-screen-grid">
+    <div class="material-visual">
+      <img class="material-main-image" src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="{{ item.title }}">
       {% if gallery %}
-      <div class="gallery-strip">
-        {% for photo in gallery %}
+      <div class="gallery-strip compact-gallery">
+        {% for photo in gallery[:6] %}
         <button class="gallery-thumb" type="button" data-full="{{ url_for('static', filename=photo.image) }}">
           <img src="{{ url_for('static', filename=photo.image) }}" alt="{{ photo.caption or item.title }}">
         </button>
@@ -23,12 +20,20 @@
       </div>
       {% endif %}
     </div>
-    <article>
-      <div class="eyebrow">{{ section.title if section else 'Экспозиция' }}</div>
+
+    <article class="material-copy-screen">
       {% if item.year %}<div class="year">{{ item.year }}</div>{% endif %}
       <h1>{{ item.title }}</h1>
       {% if item.subtitle %}<h2>{{ item.subtitle }}</h2>{% endif %}
-      <div class="body-text">{{ item.body }}</div>
+      <div class="body-text fit-text" data-fit-text>{{ item.body }}</div>
+
+      {% if item.audio %}
+      <div class="player compact-audio">
+        <div class="player-icon">♫</div>
+        <div class="player-copy"><small>Аудиозапись</small><b>{{ item.title }}</b></div>
+        <audio controls preload="metadata" src="{{ url_for('static', filename=item.audio) }}"></audio>
+      </div>
+      {% endif %}
     </article>
   </div>
 </section>
