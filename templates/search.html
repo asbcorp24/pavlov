@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="simple-head"><a class="back" href="{{ url_for('index') }}">← Главная</a><span class="eyebrow">Поиск по музею</span><h1>Найти материал</h1></section>
+<form class="search-form" method="get">
+  <input name="q" value="{{ q }}" placeholder="Введите название, имя, год или слово…" autofocus>
+  <button class="primary">Найти</button>
+</form>
+{% if q %}
+<section class="featured">
+  <div class="section-heading"><span>Результаты</span><h2>{{ results|length }} найдено</h2></div>
+  {% if results %}
+  <div class="material-grid">
+  {% for item in results %}
+    <a class="material-card" href="{{ url_for('material', material_id=item.id) }}">
+      <div class="material-image"><img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt=""></div>
+      <div class="material-copy"><small>{{ item.year }}</small><h3>{{ item.title }}</h3><p>{{ item.subtitle }}</p><span class="open-link">Открыть →</span></div>
+    </a>
+  {% endfor %}
+  </div>
+  {% else %}<div class="empty"><h2>Ничего не найдено</h2><p>Попробуйте изменить запрос.</p></div>{% endif %}
+</section>
+{% endif %}
+{% endblock %}
