@@ -12,11 +12,27 @@
     <label>Изображение<input type="file" name="image_file" accept=".jpg,.jpeg,.png,.webp,.gif"><small>JPG, PNG, WEBP, GIF</small></label>
     <label>или путь к встроенной картинке<input name="image" value="{{ item.image if item else '' }}" placeholder="img/pavlov.svg"></label>
     <label>Музыка / аудио<input type="file" name="audio_file" accept=".mp3,.wav,.ogg,.m4a"><small>MP3, WAV, OGG, M4A</small></label>
+    <label>Галерея изображений<input type="file" name="gallery_files" accept=".jpg,.jpeg,.png,.webp,.gif" multiple><small>Можно выбрать сразу несколько фотографий или сканов</small></label>
     <label>Порядок<input type="number" name="sort_order" value="{{ item.sort_order if item else 0 }}"></label>
     <label class="check span2"><input type="checkbox" name="featured" {% if item and item.featured %}checked{% endif %}> Показывать на главной странице</label>
     {% if item and item.audio %}<label class="check span2"><input type="checkbox" name="remove_audio"> Удалить текущую аудиозапись</label>{% endif %}
   </div>
   {% if item and item.image %}<div class="current-preview"><span>Текущее изображение</span><img src="{{ url_for('static', filename=item.image) }}" alt=""></div>{% endif %}
+  {% if gallery %}
+  <div class="admin-gallery">
+    <h3>Галерея материала</h3>
+    <div class="admin-gallery-grid">
+    {% for photo in gallery %}
+      <div class="admin-gallery-item">
+        <img src="{{ url_for('static', filename=photo.image) }}" alt="">
+        <form method="post" action="{{ url_for('admin_gallery_delete', image_id=photo.id) }}" onsubmit="return confirm('Удалить изображение?')">
+          <button class="delete-btn" type="submit">Удалить</button>
+        </form>
+      </div>
+    {% endfor %}
+    </div>
+  </div>
+  {% endif %}
   <div class="form-actions"><button class="primary" type="submit">Сохранить</button><a class="secondary" href="{{ url_for('admin_dashboard') }}">Отмена</a></div>
 </form>
 {% endblock %}
