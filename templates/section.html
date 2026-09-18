@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ section.title }} — музей Фёдора Павлова{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div>
+    <a class="back" href="{{ url_for('index') if not section.parent else url_for('section', slug=section.parent.slug) }}">← Назад</a>
+    <span class="eyebrow">{{ section.eyebrow }}</span>
+    <h1>{{ section.title }}</h1>
+  </div>
+  <img src="{{ url_for('static', filename=section.image) }}" alt="">
+</section>
+
+{% if section.children %}
+<section class="subsections">
+  {% for slug,title in section.children %}
+    <a class="subsection" href="{{ url_for('section', slug=slug) }}">
+      <span>{{ "%02d"|format(loop.index) }}</span><h2>{{ title }}</h2><b>→</b>
+    </a>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if items %}
+<section class="featured">
+  <div class="section-heading"><span>Экспозиция</span><h2>Материалы раздела</h2></div>
+  <div class="material-grid">
+  {% for item in items %}
+    <a class="material-card" href="{{ url_for('material', material_id=item.id) }}">
+      <div class="material-image">
+        <img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="">
+        {% if item.audio %}<span class="audio-chip">♫ Аудио</span>{% endif %}
+      </div>
+      <div class="material-copy">
+        {% if item.year %}<small>{{ item.year }}</small>{% endif %}
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.subtitle }}</p>
+        <span class="open-link">Подробнее →</span>
+      </div>
+    </a>
+  {% endfor %}
+  </div>
+</section>
+{% elif not section.children %}
+<section class="empty"><h2>Раздел готов к наполнению</h2><p>Материалы добавляются через административную панель.</p></section>
+{% endif %}
+{% endblock %}
