@@ -80,3 +80,35 @@ if(museumPlayer){
   progress?.addEventListener("input",()=>{if(audio.duration)audio.currentTime=(progress.value/100)*audio.duration;});
   if(tracks.length)setTrack(tracks.find(t=>t.dataset.audio)||tracks[0],false);
 }
+
+/* One-screen pagination: no visitor scrolling */
+document.querySelectorAll("[data-paged-grid]").forEach(grid=>{
+  const items=[...grid.querySelectorAll("[data-page-item]")];
+  const size=parseInt(grid.dataset.pageSize||"6",10);
+  const scope=grid.closest(".screen-page,.music-screen")||document;
+  const pager=scope.querySelector("[data-pager]");
+  if(!pager||!items.length)return;
+  let page=0;
+  const pages=Math.max(1,Math.ceil(items.length/size));
+  const prev=pager.querySelector("[data-prev]"), next=pager.querySelector("[data-next]"), label=pager.querySelector("[data-page-label]");
+  function draw(){
+    items.forEach((el,i)=>el.hidden=!(i>=page*size&&i<(page+1)*size));
+    if(label)label.textContent=(page+1)+" / "+pages;
+    if(prev)prev.disabled=page===0;
+    if(next)next.disabled=page===pages-1;
+    pager.hidden=pages<=1;
+  }
+  prev?.addEventListener("click",()=>{if(page>0){page--;draw();}});
+  next?.addEventListener("click",()=>{if(page<pages-1){page++;draw();}});
+  draw();
+});
+
+/* Shrink long exhibit text until it fits the fixed museum screen */
+document.querySelectorAll("[data-fit-text]").forEach(el=>{
+  let size=18;
+  el.style.fontSize=size+"px";
+  while(el.scrollHeight>el.clientHeight && size>13){
+    size-=.5;
+    el.style.fontSize=size+"px";
+  }
+});
