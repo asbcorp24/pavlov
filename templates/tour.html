@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Экскурсия — музей Фёдора Павлова{% endblock %}
+{% block content %}
+<section class="tour-head">
+  <a class="back" href="{{ url_for('index') }}">← Главная</a>
+  <span class="eyebrow">Интерактивная экскурсия</span>
+  <h1>Путь по музею</h1>
+  <p class="lead" style="margin-left:auto;margin-right:auto">Последовательно познакомьтесь с жизнью, литературным и музыкальным наследием Фёдора Павлова.</p>
+</section>
+
+{% if steps %}
+<div class="tour-progress">
+  {% for step in steps %}<span class="{% if loop.first %}active{% endif %}"></span>{% endfor %}
+</div>
+
+<section class="tour-stage" id="tourStage"
+         data-total="{{ steps|length }}">
+  {% for step in steps %}
+  <article class="tour-slide" data-index="{{ loop.index0 }}" {% if not loop.first %}hidden{% endif %}>
+    <img src="{{ url_for('static', filename=step.image or 'img/archive.svg') }}" alt="{{ step.title }}">
+    <div>
+      <span class="eyebrow">{{ step.year or 'Экспозиция' }}</span>
+      <h2>{{ step.title }}</h2>
+      <p>{{ step.body }}</p>
+      {% if step.audio %}
+      <div class="player">
+        <div class="player-icon">♫</div>
+        <div class="player-copy"><small>Аудиозапись</small><b>{{ step.title }}</b></div>
+        <audio controls preload="metadata" src="{{ url_for('static', filename=step.audio) }}"></audio>
+      </div>
+      {% endif %}
+      <a class="secondary" href="{{ url_for('material', material_id=step.id) }}">Открыть материал полностью</a>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+<div class="tour-controls">
+  <button class="secondary" id="tourPrev" type="button">← Назад</button>
+  <div id="tourCounter">1 / {{ steps|length }}</div>
+  <button class="primary" id="tourNext" type="button">Далее →</button>
+</div>
+
+<script>
+(() => {
+  const slides=[...document.querySelectorAll(".tour-slide")];
+  const bars=[...document.querySelectorAll(".tour-progress span")];
+  const prev=document.getElementById("tourPrev");
+  const next=document.getElementById("tourNext");
+  const counter=document.getElementById("tourCounter");
+  let i=0;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.hidden=k!==i);
+    bars.forEach((b,k)=>b.classList.toggle("active",k<=i));
+    counter.textContent=(i+1)+" / "+slides.length;
+    prev.disabled=i===0;
+    next.textContent=i===slides.length-1?"Завершить":"Далее →";
+  }
+  prev.addEventListener("click",()=>show(i-1));
+  next.addEventListener("click",()=>{ if(i===slides.length-1) location.href="{{ url_for('index') }}"; else show(i+1); });
+  show(0);
+})();
+</script>
+{% else %}
+<section class="empty"><h2>Экскурсия пока не наполнена</h2><p>Отметьте материалы как «Показывать на главной странице» в админ-панели.</p></section>
+{% endif %}
+{% endblock %}
