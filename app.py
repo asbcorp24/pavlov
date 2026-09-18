@@ -462,7 +462,7 @@ def admin_gallery_delete(image_id):
         abort(404)
     material_id=image["material_id"]
     if image["image"].startswith("uploads/"):
-        p=BASE_DIR/"static"/image["image"]
+        p=STATIC_DIR/image["image"]
         if p.exists():
             p.unlink()
     conn.execute("DELETE FROM gallery WHERE id=?",(image_id,))
