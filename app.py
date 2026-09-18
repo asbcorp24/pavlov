@@ -196,7 +196,7 @@ def get_sections():
 def get_main_groups():
     conn = db()
     parents = conn.execute(
-        "SELECT * FROM sections WHERE visible=1 AND parent_slug='' ORDER BY sort_order,id"
+        "SELECT * FROM sections WHERE visible=1 AND parent_slug='' AND slug!='excursion' ORDER BY sort_order,id"
     ).fetchall()
     result=[]
     for p in parents:
