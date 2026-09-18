@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="simple-head"><a class="back" href="{{ url_for('admin_dashboard') }}">← Админ-панель</a><span class="eyebrow">Редактор экспозиции</span><h1>{{ 'Изменить материал' if item else 'Новый материал' }}</h1></section>
+{% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
+<form class="admin-box editor" method="post" enctype="multipart/form-data">
+  <div class="form-grid">
+    <label>Раздел<select name="section_slug" required>{% for slug,title in sections %}<option value="{{ slug }}" {% if item and item.section_slug==slug %}selected{% endif %}>{{ title }}</option>{% endfor %}</select></label>
+    <label>Год / период<input name="year" value="{{ item.year if item else '' }}" placeholder="например, 1922"></label>
+    <label class="span2">Название<input name="title" required value="{{ item.title if item else '' }}"></label>
+    <label class="span2">Подзаголовок<input name="subtitle" value="{{ item.subtitle if item else '' }}"></label>
+    <label class="span2">Текст<textarea name="body" rows="12">{{ item.body if item else '' }}</textarea></label>
+    <label>Изображение<input type="file" name="image_file" accept=".jpg,.jpeg,.png,.webp,.gif"><small>JPG, PNG, WEBP, GIF</small></label>
+    <label>или путь к встроенной картинке<input name="image" value="{{ item.image if item else '' }}" placeholder="img/pavlov.svg"></label>
+    <label>Музыка / аудио<input type="file" name="audio_file" accept=".mp3,.wav,.ogg,.m4a"><small>MP3, WAV, OGG, M4A</small></label>
+    <label>Порядок<input type="number" name="sort_order" value="{{ item.sort_order if item else 0 }}"></label>
+    <label class="check span2"><input type="checkbox" name="featured" {% if item and item.featured %}checked{% endif %}> Показывать на главной странице</label>
+    {% if item and item.audio %}<label class="check span2"><input type="checkbox" name="remove_audio"> Удалить текущую аудиозапись</label>{% endif %}
+  </div>
+  {% if item and item.image %}<div class="current-preview"><span>Текущее изображение</span><img src="{{ url_for('static', filename=item.image) }}" alt=""></div>{% endif %}
+  <div class="form-actions"><button class="primary" type="submit">Сохранить</button><a class="secondary" href="{{ url_for('admin_dashboard') }}">Отмена</a></div>
+</form>
+{% endblock %}
