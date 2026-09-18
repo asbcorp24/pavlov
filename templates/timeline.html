@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ section.title }} — музей Фёдора Павлова{% endblock %}
+{% block content %}
+<section class="page-hero">
+  <div>
+    <a class="back" href="{{ url_for('section', slug=section.parent.slug) if section.parent else url_for('index') }}">← Назад</a>
+    <span class="eyebrow">{{ section.eyebrow }}</span>
+    <h1>{{ section.title }}</h1>
+  </div>
+  <img src="{{ url_for('static', filename=section.image) }}" alt="">
+</section>
+
+<section class="featured">
+  <div class="section-heading"><span>1892—1931</span><h2>Хронология жизни</h2></div>
+  {% if items %}
+  <div class="timeline-wrap">
+    <div class="timeline-line"></div>
+    {% for item in items %}
+    <div class="timeline-item">
+      <span class="timeline-dot"></span>
+      <a class="timeline-card" href="{{ url_for('material', material_id=item.id) }}">
+        <img src="{{ url_for('static', filename=item.image or 'img/biography.svg') }}" alt="">
+        <div>
+          <div class="timeline-year">{{ item.year or '—' }}</div>
+          <h2>{{ item.title }}</h2>
+          <p>{{ item.subtitle }}</p>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><h2>Летопись пока не наполнена</h2><p>Добавьте события через админ-панель.</p></div>
+  {% endif %}
+</section>
+{% endblock %}
