@@ -1,36 +1,35 @@
 {% extends "base.html" %}
 {% block title %}{{ section.title }} — музей Фёдора Павлова{% endblock %}
 {% block content %}
-<section class="page-hero">
-  <div>
-    <a class="back" href="{{ url_for('section', slug=section.parent.slug) if section.parent else url_for('index') }}">← Назад</a>
-    <span class="eyebrow">{{ section.eyebrow }}</span>
-    <h1>{{ section.title }}</h1>
-  </div>
-  <img src="{{ url_for('static', filename=section.image) }}" alt="">
-</section>
-
-<section class="featured">
-  <div class="section-heading"><span>1892—1931</span><h2>Хронология жизни</h2></div>
-  {% if items %}
-  <div class="timeline-wrap">
-    <div class="timeline-line"></div>
-    {% for item in items %}
-    <div class="timeline-item">
-      <span class="timeline-dot"></span>
-      <a class="timeline-card" href="{{ url_for('material', material_id=item.id) }}">
-        <img src="{{ url_for('static', filename=item.image or 'img/biography.svg') }}" alt="">
-        <div>
-          <div class="timeline-year">{{ item.year or '—' }}</div>
-          <h2>{{ item.title }}</h2>
-          <p>{{ item.subtitle }}</p>
-        </div>
-      </a>
+<section class="screen-page">
+  <header class="screen-head">
+    <div>
+      <a class="back" href="{{ url_for('section', slug=section.parent.slug) if section.parent else url_for('index') }}">← Назад</a>
+      <span class="eyebrow">1892—1931</span>
+      <h1>Летопись жизни</h1>
     </div>
+    <img src="{{ url_for('static', filename=section.image) }}" alt="">
+  </header>
+
+  {% if items %}
+  <div class="horizontal-timeline" data-paged-grid data-page-size="4">
+    {% for item in items %}
+    <a class="timeline-stop" href="{{ url_for('material', material_id=item.id) }}" data-page-item>
+      <div class="timeline-year">{{ item.year or '—' }}</div>
+      <span class="timeline-node"></span>
+      <img src="{{ url_for('static', filename=item.image or 'img/biography.svg') }}" alt="">
+      <h2>{{ item.title }}</h2>
+      <p>{{ item.subtitle }}</p>
+    </a>
     {% endfor %}
   </div>
+  <div class="pager" data-pager>
+    <button type="button" data-prev>←</button>
+    <span data-page-label></span>
+    <button type="button" data-next>→</button>
+  </div>
   {% else %}
-  <div class="empty"><h2>Летопись пока не наполнена</h2><p>Добавьте события через админ-панель.</p></div>
+  <div class="screen-empty"><h2>Летопись пока не наполнена</h2></div>
   {% endif %}
 </section>
 {% endblock %}
