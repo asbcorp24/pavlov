@@ -7,7 +7,7 @@
   <title>{% block title %}Музей Фёдора Павлова{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="{% if request.path.startswith('/admin') %}admin-page{% else %}museum-page{% endif %}">
 <div class="app">
   <header class="topbar">
     <a href="{{ url_for('index') }}" class="brand">
