@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }} — музей Фёдора Павлова{% endblock %}
+{% block content %}
+<section class="detail">
+  <a class="back" href="{{ url_for('section', slug=item.section_slug) }}">← К разделу</a>
+  <div class="detail-grid">
+    <div class="detail-media">
+      <img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="{{ item.title }}">
+      {% if item.audio %}
+      <div class="player">
+        <div class="player-icon">♫</div>
+        <div class="player-copy"><small>Аудиозапись</small><b>{{ item.title }}</b></div>
+        <audio controls preload="metadata" src="{{ url_for('static', filename=item.audio) }}"></audio>
+      </div>
+      {% endif %}
+    </div>
+    <article>
+      <div class="eyebrow">{{ section.title if section else 'Экспозиция' }}</div>
+      {% if item.year %}<div class="year">{{ item.year }}</div>{% endif %}
+      <h1>{{ item.title }}</h1>
+      {% if item.subtitle %}<h2>{{ item.subtitle }}</h2>{% endif %}
+      <div class="body-text">{{ item.body }}</div>
+    </article>
+  </div>
+</section>
+{% endblock %}
