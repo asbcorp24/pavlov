@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Разделы музея — админ-панель{% endblock %}
+{% block content %}
+<section class="simple-head">
+  <a class="back" href="{{ url_for('admin_dashboard') }}">← Админ-панель</a>
+  <span class="eyebrow">Структура музея</span>
+  <div class="admin-title-row">
+    <h1>Разделы</h1>
+    <div><a class="primary" href="{{ url_for('admin_section_new') }}">+ Новый раздел</a></div>
+  </div>
+</section>
+{% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
+
+<div class="admin-box">
+  <p class="admin-help">Здесь можно менять названия разделов, подписи, изображения, порядок и видимость. Если изменить slug, материалы и подразделы будут перенесены автоматически.</p>
+  <div class="section-admin-list">
+    {% for s in sections %}
+    <div class="section-admin-row {% if s.parent_slug %}child{% endif %}">
+      <img src="{{ url_for('static', filename=s.image or 'img/archive.svg') }}" alt="">
+      <div>
+        <small>{% if s.parent_slug %}Подраздел · {{ s.parent_slug }}{% else %}Главный раздел{% endif %}</small>
+        <b>{{ s.title }}</b>
+        <span>{{ s.slug }} · порядок {{ s.sort_order }} · {% if s.visible %}виден{% else %}скрыт{% endif %}</span>
+      </div>
+      <a class="edit-btn" href="{{ url_for('admin_section_edit', section_id=s.id) }}">Изменить</a>
+      <form method="post" action="{{ url_for('admin_section_delete', section_id=s.id) }}" onsubmit="return confirm('Удалить этот раздел?')">
+        <button class="delete-btn" type="submit">Удалить</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
