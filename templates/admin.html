@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="simple-head">
+  <a class="back" href="{{ url_for('index') }}">← В музей</a>
+  <span class="eyebrow">Управление экспозицией</span>
+  <div class="admin-title-row"><h1>Админ-панель</h1><div><a class="primary" href="{{ url_for('admin_new') }}">+ Добавить материал</a><a class="secondary" href="{{ url_for('admin_logout') }}">Выйти</a></div></div>
+</section>
+{% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
+<div class="admin-box">
+  <div class="admin-table">
+  {% for item in items %}
+    <div class="admin-row">
+      <img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="">
+      <div class="admin-main"><small>{{ item.section_slug }}{% if item.year %} · {{ item.year }}{% endif %}</small><b>{{ item.title }}</b><span>{{ item.subtitle }}</span></div>
+      {% if item.audio %}<span class="mini-chip">♫</span>{% endif %}
+      <a class="edit-btn" href="{{ url_for('admin_edit', material_id=item.id) }}">Изменить</a>
+      <form method="post" action="{{ url_for('admin_delete', material_id=item.id) }}" onsubmit="return confirm('Удалить материал?')"><button class="delete-btn">Удалить</button></form>
+    </div>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}
