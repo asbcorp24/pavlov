@@ -1,63 +1,54 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <div class="hero-copy">
+<section class="home-screen">
+  <div class="home-intro">
     <div class="eyebrow">Интерактивная музейная экспозиция</div>
-    <h1>Фёдор Павлов:<br><em>история и современность</em></h1>
-    <p class="lead">Композитор, дирижёр, драматург, педагог и фольклорист. История человека, стоявшего у истоков профессиональной музыкальной и театральной культуры Чувашии.</p>
-    <div class="hero-buttons">
-      <a class="primary" href="{{ url_for('tour') }}">Начать экскурсию <span>→</span></a>
-      <a class="secondary" href="{{ url_for('music') }}">Слушать музыку ♫</a>
-    </div>
-  </div>
-  <div class="hero-visual">
+    <h1>Фёдор<br>Павлов</h1>
+    <div class="home-years">1892—1931</div>
+    <p>Композитор, дирижёр, драматург, педагог и фольклорист.</p>
     <img src="{{ url_for('static', filename='img/pavlov.svg') }}" alt="Фёдор Павлов">
-    <div class="hero-caption"><b>1892—1931</b><span>Фёдор Павлович Павлов</span></div>
+    <div class="home-actions">
+      <a class="primary" href="{{ url_for('tour') }}">Экскурсия →</a>
+      <a class="secondary" href="{{ url_for('music') }}">♫ Музыка</a>
+    </div>
   </div>
-</section>
 
-<section class="museum-nav">
-  {% for g in groups %}
-  <a class="nav-card" href="{{ url_for('section', slug=g.slug) }}">
-    <img src="{{ url_for('static', filename=g.image) }}" alt="">
-    <div class="shade"></div>
-    <div class="nav-card-text">
-      <span class="index">0{{ loop.index }}</span>
-      <div><small>{{ g.eyebrow }}</small><h2>{{ g.title }}</h2></div>
-      <b>→</b>
+  <div class="home-menu">
+    <div class="home-menu-title">
+      <span class="eyebrow">История и современность</span>
+      <h2>Разделы музея</h2>
     </div>
-  </a>
-  {% endfor %}
-  <a class="nav-card wide-card" href="{{ url_for('tour') }}">
-    <img src="{{ url_for('static', filename='img/excursion.svg') }}" alt="">
-    <div class="shade"></div>
-    <div class="nav-card-text">
-      <span class="index">05</span>
-      <div><small>Маршрут по музею</small><h2>Экскурсия</h2></div>
-      <b>→</b>
-    </div>
-  </a>
-</section>
-
-{% if featured %}
-<section class="featured">
-  <div class="section-heading"><span>Избранное</span><h2>Материалы музея</h2></div>
-  <div class="material-grid">
-    {% for item in featured %}
-      <a class="material-card" href="{{ url_for('material', material_id=item.id) }}">
-        <div class="material-image">
-          <img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="">
-          {% if item.audio %}<span class="audio-chip">♫ Аудио</span>{% endif %}
-        </div>
-        <div class="material-copy">
-          {% if item.year %}<small>{{ item.year }}</small>{% endif %}
-          <h3>{{ item.title }}</h3>
-          <p>{{ item.subtitle }}</p>
-          <span class="open-link">Открыть →</span>
+    <div class="home-menu-grid">
+      {% for g in groups %}
+      <a class="home-menu-card" href="{{ url_for('section', slug=g.slug) }}">
+        <img src="{{ url_for('static', filename=g.image) }}" alt="">
+        <div class="shade"></div>
+        <div class="home-menu-card-copy">
+          <span>0{{ loop.index }}</span>
+          <div><small>{{ g.eyebrow }}</small><h3>{{ g.title }}</h3></div>
+          <b>→</b>
         </div>
       </a>
-    {% endfor %}
+      {% endfor %}
+      <a class="home-menu-card" href="{{ url_for('tour') }}">
+        <img src="{{ url_for('static', filename='img/excursion.svg') }}" alt="">
+        <div class="shade"></div>
+        <div class="home-menu-card-copy">
+          <span>05</span>
+          <div><small>Маршрут по музею</small><h3>Экскурсия</h3></div>
+          <b>→</b>
+        </div>
+      </a>
+      <a class="home-menu-card" href="{{ url_for('music') }}">
+        <img src="{{ url_for('static', filename='img/music.svg') }}" alt="">
+        <div class="shade"></div>
+        <div class="home-menu-card-copy">
+          <span>06</span>
+          <div><small>Музыкальный зал</small><h3>Слушать</h3></div>
+          <b>♫</b>
+        </div>
+      </a>
+    </div>
   </div>
 </section>
-{% endif %}
 {% endblock %}
