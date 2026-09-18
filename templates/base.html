@@ -29,6 +29,17 @@
     <a href="{{ url_for('admin_login') }}">Администратор</a>
   </footer>
 </div>
+
+<div id="screensaver" class="screensaver" aria-hidden="true">
+  <div class="screensaver-pattern"></div>
+  <div class="screensaver-inner">
+    <div class="screensaver-mark">ФП</div>
+    <div class="eyebrow">Интерактивная экспозиция</div>
+    <h2>Фёдор Павлов</h2>
+    <p>История и современность</p>
+    <button type="button" id="wakeMuseum">Коснитесь экрана, чтобы начать</button>
+  </div>
+</div>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
