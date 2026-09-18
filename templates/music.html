@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Музыка Фёдора Павлова{% endblock %}
+{% block content %}
+<section class="simple-head">
+  <a class="back" href="{{ url_for('index') }}">← Главная</a>
+  <span class="eyebrow">Музыкальный зал</span>
+  <h1>Музыка Фёдора Павлова</h1>
+  <p class="lead">Произведения, исполнения и музыкальные материалы музея. Записи, загруженные администратором, можно слушать прямо на сенсорном столе.</p>
+</section>
+
+{% if tracks %}
+<section class="music-layout">
+  <div class="music-player" id="museumPlayer">
+    <img class="music-cover" data-player-cover src="{{ url_for('static', filename=tracks[0].image or 'img/music.svg') }}" alt="">
+    <div class="music-player-copy">
+      <small>Сейчас выбрано</small>
+      <h2 data-player-title>{{ tracks[0].title }}</h2>
+      <p data-player-subtitle>{{ tracks[0].subtitle }}</p>
+    </div>
+    <div class="music-controls">
+      <button class="music-play" data-player-play type="button">▶</button>
+      <div>
+        <input class="music-progress" data-player-progress type="range" min="0" max="100" value="0">
+        <div class="music-time" data-player-time>0:00 / 0:00</div>
+      </div>
+    </div>
+    <audio preload="metadata"></audio>
+  </div>
+
+  <div class="track-list">
+    {% for item in tracks %}
+    <button type="button" class="track"
+      data-track
+      data-title="{{ item.title }}"
+      data-subtitle="{{ item.subtitle }}"
+      data-image="{{ url_for('static', filename=item.image or 'img/music.svg') }}"
+      data-audio="{% if item.audio %}{{ url_for('static', filename=item.audio) }}{% endif %}">
+      <img src="{{ url_for('static', filename=item.image or 'img/music.svg') }}" alt="">
+      <span class="track-copy">
+        <small>{{ item.year or 'Музыкальное произведение' }}</small>
+        <b>{{ item.title }}</b>
+        <span>{{ item.subtitle }}</span>
+      </span>
+      <span class="track-icon">{% if item.audio %}▶{% else %}♪{% endif %}</span>
+    </button>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<section class="empty"><h2>Музыкальных материалов пока нет</h2><p>Добавьте их через админ-панель.</p></section>
+{% endif %}
+{% endblock %}
