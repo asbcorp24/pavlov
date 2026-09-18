@@ -6,7 +6,7 @@
     <h1>Фёдор Павлов:<br><em>история и современность</em></h1>
     <p class="lead">Композитор, дирижёр, драматург, педагог и фольклорист. История человека, стоявшего у истоков профессиональной музыкальной и театральной культуры Чувашии.</p>
     <div class="hero-buttons">
-      <a class="primary" href="{{ url_for('section', slug='excursion') }}">Начать экскурсию <span>→</span></a>
+      <a class="primary" href="{{ url_for('tour') }}">Начать экскурсию <span>→</span></a>
       <a class="secondary" href="{{ url_for('section', slug='musical-works') }}">Слушать музыку ♫</a>
     </div>
   </div>
@@ -28,7 +28,7 @@
     </div>
   </a>
   {% endfor %}
-  <a class="nav-card wide-card" href="{{ url_for('section', slug='excursion') }}">
+  <a class="nav-card wide-card" href="{{ url_for('tour') }}">
     <img src="{{ url_for('static', filename='img/excursion.svg') }}" alt="">
     <div class="shade"></div>
     <div class="nav-card-text">
