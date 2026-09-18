@@ -353,6 +353,7 @@ def admin_delete(material_id):
 def not_found(_):
     return render_template("404.html"),404
 
+init_db()
+
 if __name__=="__main__":
-    init_db()
     app.run(host="0.0.0.0",port=5000,debug=True)
