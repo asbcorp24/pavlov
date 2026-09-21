@@ -197,3 +197,11 @@
  .screen-grid-materials{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr)}
  .horizontal-timeline{grid-template-columns:repeat(4,1fr)}
 }
+
+.current-file{margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#0d1011;color:var(--muted)}
+.current-file b{color:var(--text)}
+.document-button{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px 14px;border:1px solid #5d4c2d;border-radius:12px;background:#17150f;color:var(--text)}
+.document-button:hover{border-color:var(--gold)}
+.document-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:9px;background:#2a2317;color:var(--gold2);font-size:22px}
+.document-button small,.document-button b{display:block}
+.document-button small{color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-size:10px}
