@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Экскурсия — админ-панель{% endblock %}
+{% block content %}
+<section class="simple-head">
+  <a class="back" href="{{ url_for('admin_dashboard') }}">← Админ-панель</a>
+  <span class="eyebrow">Маршрут посетителя</span>
+  <div class="admin-title-row">
+    <h1>Экскурсия</h1>
+    <div>
+      <a class="secondary" href="{{ url_for('tour') }}" target="_blank">Открыть экскурсию</a>
+    </div>
+  </div>
+  <p class="admin-help">Отметьте материалы, которые должны войти в экскурсию. Число «Порядок» задаёт последовательность: 10, 20, 30 и т. д. Экскурсия больше не связана с флажком «Показывать на главной».</p>
+</section>
+
+{% with messages=get_flashed_messages(with_categories=true) %}
+  {% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<form class="admin-box" method="post">
+  <div class="admin-tour-list">
+    {% for item in items %}
+    <div class="admin-tour-row {% if item.tour_enabled %}enabled{% endif %}">
+      <label class="admin-tour-check" title="Включить в экскурсию">
+        <input type="checkbox" name="enabled_{{ item.id }}" {% if item.tour_enabled %}checked{% endif %}>
+      </label>
+      <img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="">
+      <div class="admin-tour-main">
+        <small>{{ item.section_slug }}{% if item.year %} · {{ item.year }}{% endif %}</small>
+        <b>{{ item.title }}</b>
+        <span>{{ item.subtitle }}</span>
+      </div>
+      <label class="admin-tour-order">Порядок
+        <input type="number" name="order_{{ item.id }}" value="{{ item.tour_order or 0 }}" step="1">
+      </label>
+      <a class="edit-btn" href="{{ url_for('admin_edit', material_id=item.id) }}">Изменить</a>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="form-actions">
+    <button class="primary" type="submit">Сохранить маршрут</button>
+    <a class="secondary" href="{{ url_for('admin_dashboard') }}">Назад</a>
+  </div>
+</form>
+{% endblock %}
