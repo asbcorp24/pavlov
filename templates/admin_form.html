@@ -13,8 +13,10 @@
     <label>Музыка / аудио<input type="file" name="audio_file" accept=".mp3,.wav,.ogg,.m4a"><small>Выберите файл: MP3, WAV, OGG, M4A</small></label>
     <label class="span2">Документ / архивный файл<input type="file" name="attachment_file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.xls,.xlsx,.ppt,.pptx,.zip"><small>PDF, Word, Excel, PowerPoint, TXT, ZIP — файл будет храниться локально рядом с музеем</small></label>
     <label>Галерея изображений<input type="file" name="gallery_files" accept=".jpg,.jpeg,.png,.webp,.gif" multiple><small>Можно выбрать сразу несколько фотографий или сканов</small></label>
-    <label>Порядок<input type="number" name="sort_order" value="{{ item.sort_order if item else 0 }}"></label>
-    <label class="check span2"><input type="checkbox" name="featured" {% if item and item.featured %}checked{% endif %}> Показывать на главной странице</label>
+    <label>Порядок в разделе<input type="number" name="sort_order" value="{{ item.sort_order if item else 0 }}"></label>
+    <label>Порядок в экскурсии<input type="number" name="tour_order" value="{{ item.tour_order if item else 0 }}" placeholder="10, 20, 30..."><small>Используется только если материал включён в экскурсию.</small></label>
+    <label class="check"><input type="checkbox" name="featured" {% if item and item.featured %}checked{% endif %}> Показывать на главной странице</label>
+    <label class="check"><input type="checkbox" name="tour_enabled" {% if item and item.tour_enabled %}checked{% endif %}> Включить в экскурсию</label>
     {% if item and item.audio %}<label class="check span2"><input type="checkbox" name="remove_audio"> Удалить текущую аудиозапись</label>{% endif %}
     {% if item and item.attachment %}<label class="check span2"><input type="checkbox" name="remove_attachment"> Удалить текущий документ</label>{% endif %}
   </div>
