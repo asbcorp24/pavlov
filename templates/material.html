@@ -27,6 +27,13 @@
       {% if item.subtitle %}<h2>{{ item.subtitle }}</h2>{% endif %}
       <div class="body-text fit-text" data-fit-text>{{ item.body }}</div>
 
+      {% if item.attachment %}
+      <a class="document-button" href="{{ url_for('static', filename=item.attachment) }}" target="_blank" rel="noopener">
+        <span class="document-icon">▤</span>
+        <span><small>Документ</small><b>Открыть загруженный файл</b></span>
+      </a>
+      {% endif %}
+
       {% if item.audio %}
       <div class="player compact-audio">
         <div class="player-icon">♫</div>
