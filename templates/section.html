@@ -1,6 +1,59 @@
 {% extends "base.html" %}
 {% block title %}{{ section.title }} — музей Фёдора Павлова{% endblock %}
 {% block content %}
+
+{% if section.slug == 'biography' %}
+<section class="biography-hub">
+  <div class="biography-portrait">
+    <a class="back biography-back" href="{{ url_for('index') }}">← Главная</a>
+    <img src="{{ url_for('static', filename=site_settings.home_image or section.image) }}" alt="Фёдор Павлов">
+    <div class="biography-portrait-shade"></div>
+    <div class="biography-portrait-copy">
+      <span class="eyebrow">Жизненный путь</span>
+      <h1>Фёдор Павлов</h1>
+      <strong>{{ site_settings.home_years or '1892—1931' }}</strong>
+      <p>{{ site_settings.home_description }}</p>
+    </div>
+  </div>
+
+  <div class="biography-menu">
+    <div class="biography-menu-head">
+      <span class="eyebrow">Биография</span>
+      <h2>Жизнь и наследие</h2>
+      <p>Выберите способ знакомства с жизнью Фёдора Павлова.</p>
+    </div>
+
+    <div class="biography-menu-grid">
+      {% for slug,title in section.children %}
+      <a class="biography-choice biography-choice-{{ loop.index }}" href="{{ url_for('section', slug=slug) }}">
+        <span class="biography-choice-num">{{ "%02d"|format(loop.index) }}</span>
+        <div class="biography-choice-copy">
+          {% if slug == 'autobiography' %}
+            <small>История жизни</small>
+            <h3>{{ title }}</h3>
+            <p>Биографические материалы, фотографии и основные этапы жизненного пути.</p>
+          {% elif slug == 'bibliography' %}
+            <small>Книги и исследования</small>
+            <h3>{{ title }}</h3>
+            <p>Издания, статьи, исследования, документы и публикации о Фёдоре Павлове.</p>
+          {% elif slug == 'chronicle' %}
+            <small>1892—1931</small>
+            <h3>{{ title }}</h3>
+            <p>Интерактивная хронология важнейших событий жизни и деятельности.</p>
+          {% else %}
+            <small>Раздел биографии</small>
+            <h3>{{ title }}</h3>
+            <p>Материалы биографической экспозиции.</p>
+          {% endif %}
+        </div>
+        <b>→</b>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% else %}
 <section class="screen-page">
   <header class="screen-head">
     <div>
@@ -44,4 +97,5 @@
   <div class="screen-empty"><h2>Раздел готов к наполнению</h2><p>Материалы добавляются через административную панель.</p></div>
   {% endif %}
 </section>
+{% endif %}
 {% endblock %}
