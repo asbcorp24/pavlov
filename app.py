@@ -43,6 +43,7 @@ ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
 IMAGE_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
 AUDIO_EXT = {"mp3", "wav", "ogg", "m4a"}
+FILE_EXT = {"pdf", "doc", "docx", "txt", "rtf", "odt", "xls", "xlsx", "ppt", "pptx", "zip"}
 
 DEFAULT_SECTIONS = [
     ("biography", "Биография", "", "Жизненный путь", "img/biography.svg", 10),
@@ -100,6 +101,7 @@ def init_db():
       body TEXT DEFAULT '',
       image TEXT DEFAULT '',
       audio TEXT DEFAULT '',
+      attachment TEXT DEFAULT '',
       year TEXT DEFAULT '',
       sort_order INTEGER DEFAULT 0,
       featured INTEGER DEFAULT 0,
@@ -114,6 +116,10 @@ def init_db():
       FOREIGN KEY(material_id) REFERENCES materials(id) ON DELETE CASCADE
     );
     """)
+    material_columns = {row["name"] for row in conn.execute("PRAGMA table_info(materials)").fetchall()}
+    if "attachment" not in material_columns:
+        conn.execute("ALTER TABLE materials ADD COLUMN attachment TEXT DEFAULT ''")
+
     section_count = conn.execute("SELECT COUNT(*) n FROM sections").fetchone()["n"]
     if section_count == 0:
         conn.executemany(
@@ -258,7 +264,12 @@ def save_upload(file,kind):
     if not file or not file.filename:
         return ""
     ext=file.filename.rsplit(".",1)[-1].lower() if "." in file.filename else ""
-    allowed=IMAGE_EXT if kind=="image" else AUDIO_EXT
+    if kind=="image":
+        allowed=IMAGE_EXT
+    elif kind=="audio":
+        allowed=AUDIO_EXT
+    else:
+        allowed=FILE_EXT
     if ext not in allowed:
         raise ValueError("Недопустимый формат файла")
     name=secure_filename(file.filename) or ("file."+ext)
@@ -389,16 +400,17 @@ def admin_new():
         try:
             image=save_upload(request.files.get("image_file"),"image")
             audio=save_upload(request.files.get("audio_file"),"audio")
+            attachment=save_upload(request.files.get("attachment_file"),"file")
         except ValueError as e:
             flash(str(e),"danger")
             return redirect(request.url)
         conn=db()
         cur=conn.execute(
-            """INSERT INTO materials(section_slug,title,subtitle,body,image,audio,year,sort_order,featured)
-               VALUES(?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO materials(section_slug,title,subtitle,body,image,audio,attachment,year,sort_order,featured)
+               VALUES(?,?,?,?,?,?,?,?,?,?)""",
             (request.form["section_slug"],request.form["title"].strip(),
              request.form.get("subtitle","").strip(),request.form.get("body","").strip(),
-             image or request.form.get("image","").strip(),audio,
+             image or "img/archive.svg",audio,attachment,
              request.form.get("year","").strip(),int(request.form.get("sort_order") or 0),
              1 if request.form.get("featured") else 0)
         )
@@ -424,21 +436,25 @@ def admin_edit(material_id):
         try:
             new_image=save_upload(request.files.get("image_file"),"image")
             new_audio=save_upload(request.files.get("audio_file"),"audio")
+            new_attachment=save_upload(request.files.get("attachment_file"),"file")
             add_gallery_files(conn,material_id)
         except ValueError as e:
             conn.close()
             flash(str(e),"danger")
             return redirect(request.url)
-        image=new_image or request.form.get("image","").strip() or item["image"]
+        image=new_image or item["image"] or "img/archive.svg"
         audio=new_audio or item["audio"]
+        attachment=new_attachment or item["attachment"]
         if request.form.get("remove_audio"):
             audio=""
+        if request.form.get("remove_attachment"):
+            attachment=""
         conn.execute(
-            """UPDATE materials SET section_slug=?,title=?,subtitle=?,body=?,image=?,audio=?,
+            """UPDATE materials SET section_slug=?,title=?,subtitle=?,body=?,image=?,audio=?,attachment=?,
                year=?,sort_order=?,featured=? WHERE id=?""",
             (request.form["section_slug"],request.form["title"].strip(),
              request.form.get("subtitle","").strip(),request.form.get("body","").strip(),
-             image,audio,request.form.get("year","").strip(),
+             image,audio,attachment,request.form.get("year","").strip(),
              int(request.form.get("sort_order") or 0),
              1 if request.form.get("featured") else 0,material_id)
         )
@@ -478,7 +494,7 @@ def admin_delete(material_id):
     item=conn.execute("SELECT * FROM materials WHERE id=?",(material_id,)).fetchone()
     gallery=conn.execute("SELECT image FROM gallery WHERE material_id=?",(material_id,)).fetchall()
     if item:
-        paths=[item["image"],item["audio"]]+[x["image"] for x in gallery]
+        paths=[item["image"],item["audio"],item["attachment"]]+[x["image"] for x in gallery]
         for value in paths:
             if value and value.startswith("uploads/"):
                 p=STATIC_DIR/value
@@ -507,6 +523,11 @@ def admin_section_new():
         if not slug or not title:
             flash("Нужны slug и название","danger")
             return redirect(request.url)
+        try:
+            section_image=save_upload(request.files.get("image_file"),"image")
+        except ValueError as e:
+            flash(str(e),"danger")
+            return redirect(request.url)
         conn=db()
         try:
             conn.execute(
@@ -514,7 +535,7 @@ def admin_section_new():
                    VALUES(?,?,?,?,?,?,?)""",
                 (slug,title,request.form.get("parent_slug","").strip(),
                  request.form.get("eyebrow","").strip(),
-                 request.form.get("image","").strip() or "img/archive.svg",
+                 section_image or "img/archive.svg",
                  int(request.form.get("sort_order") or 0),
                  1 if request.form.get("visible") else 0)
             )
@@ -545,12 +566,18 @@ def admin_section_edit(section_id):
             flash("Нужны slug и название","danger")
             return redirect(request.url)
         try:
+            section_image=save_upload(request.files.get("image_file"),"image")
+        except ValueError as e:
+            conn.close()
+            flash(str(e),"danger")
+            return redirect(request.url)
+        try:
             conn.execute(
                 """UPDATE sections SET slug=?,title=?,parent_slug=?,eyebrow=?,image=?,
                    sort_order=?,visible=? WHERE id=?""",
                 (new_slug,title,request.form.get("parent_slug","").strip(),
                  request.form.get("eyebrow","").strip(),
-                 request.form.get("image","").strip() or "img/archive.svg",
+                 section_image or row["image"] or "img/archive.svg",
                  int(request.form.get("sort_order") or 0),
                  1 if request.form.get("visible") else 0,section_id)
             )
