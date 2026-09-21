@@ -115,10 +115,29 @@ def init_db():
       sort_order INTEGER DEFAULT 0,
       FOREIGN KEY(material_id) REFERENCES materials(id) ON DELETE CASCADE
     );
+    CREATE TABLE IF NOT EXISTS site_settings(
+      key TEXT PRIMARY KEY,
+      value TEXT DEFAULT ''
+    );
     """)
     material_columns = {row["name"] for row in conn.execute("PRAGMA table_info(materials)").fetchall()}
     if "attachment" not in material_columns:
         conn.execute("ALTER TABLE materials ADD COLUMN attachment TEXT DEFAULT ''")
+
+    defaults = {
+        "home_eyebrow": "Интерактивная музейная экспозиция",
+        "home_title": "Фёдор Павлов",
+        "home_years": "1892—1931",
+        "home_description": "Композитор, дирижёр, драматург, педагог и фольклорист.",
+        "home_image": "img/pavlov.svg",
+        "home_menu_eyebrow": "История и современность",
+        "home_menu_title": "Разделы музея"
+    }
+    for key, value in defaults.items():
+        conn.execute(
+            "INSERT OR IGNORE INTO site_settings(key,value) VALUES(?,?)",
+            (key, value)
+        )
 
     section_count = conn.execute("SELECT COUNT(*) n FROM sections").fetchone()["n"]
     if section_count == 0:
@@ -260,6 +279,19 @@ def section_info(slug):
     info["parent"]=dict(parent) if parent else None
     return info
 
+def get_site_settings():
+    conn=db()
+    rows=conn.execute("SELECT key,value FROM site_settings").fetchall()
+    conn.close()
+    return {row["key"]: row["value"] for row in rows}
+
+def set_site_setting(conn,key,value):
+    conn.execute(
+        """INSERT INTO site_settings(key,value) VALUES(?,?)
+           ON CONFLICT(key) DO UPDATE SET value=excluded.value""",
+        (key,value)
+    )
+
 def save_upload(file,kind):
     if not file or not file.filename:
         return ""
@@ -287,7 +319,10 @@ def admin_required(fn):
 
 @app.context_processor
 def inject():
-    return {"groups":get_main_groups()}
+    return {
+        "groups": get_main_groups(),
+        "site_settings": get_site_settings()
+    }
 
 @app.route("/")
 def index():
@@ -374,6 +409,44 @@ def admin_login():
 def admin_logout():
     session.clear()
     return redirect(url_for("index"))
+
+@app.route("/admin/home",methods=["GET","POST"])
+@admin_required
+def admin_home():
+    settings=get_site_settings()
+    if request.method=="POST":
+        try:
+            new_image=save_upload(request.files.get("home_image_file"),"image")
+        except ValueError as e:
+            flash(str(e),"danger")
+            return redirect(request.url)
+
+        conn=db()
+        current_image=settings.get("home_image","img/pavlov.svg")
+        image=new_image or current_image
+
+        for key in (
+            "home_eyebrow",
+            "home_title",
+            "home_years",
+            "home_description",
+            "home_menu_eyebrow",
+            "home_menu_title",
+        ):
+            set_site_setting(conn,key,request.form.get(key,"").strip())
+        set_site_setting(conn,"home_image",image)
+        conn.commit()
+        conn.close()
+
+        if new_image and current_image.startswith("uploads/") and current_image != new_image:
+            old_path=STATIC_DIR/current_image
+            if old_path.exists():
+                old_path.unlink()
+
+        flash("Главная страница сохранена","success")
+        return redirect(url_for("admin_home"))
+
+    return render_template("admin_home.html",settings=settings)
 
 @app.route("/admin")
 @admin_required
