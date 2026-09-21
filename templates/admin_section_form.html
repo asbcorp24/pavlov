@@ -9,7 +9,7 @@
 
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
 
-<form class="admin-box editor" method="post">
+<form class="admin-box editor" method="post" enctype="multipart/form-data">
   <div class="form-grid">
     <label>Slug
       <input name="slug" required value="{{ section.slug if section else '' }}" placeholder="например, photo-archive">
@@ -32,10 +32,13 @@
     <label>Порядок
       <input type="number" name="sort_order" value="{{ section.sort_order if section else 0 }}">
     </label>
-    <label class="span2">Изображение
-      <input name="image" value="{{ section.image if section else 'img/archive.svg' }}" placeholder="img/archive.svg">
-      <small>Путь к изображению внутри static. Загружаемые изображения для разделов можно добавить позже отдельной кнопкой.</small>
+    <label class="span2">Изображение раздела
+      <input type="file" name="image_file" accept=".jpg,.jpeg,.png,.webp,.gif">
+      <small>Выберите изображение с компьютера. Оно будет скопировано в локальное хранилище музея.</small>
     </label>
+    {% if section and section.image %}
+    <div class="current-preview span2"><span>Текущее изображение</span><img src="{{ url_for('static', filename=section.image) }}" alt=""></div>
+    {% endif %}
     <label class="check span2">
       <input type="checkbox" name="visible" {% if not section or section.visible %}checked{% endif %}>
       Показывать раздел посетителям
