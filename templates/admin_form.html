@@ -9,15 +9,18 @@
     <label class="span2">Название<input name="title" required value="{{ item.title if item else '' }}"></label>
     <label class="span2">Подзаголовок<input name="subtitle" value="{{ item.subtitle if item else '' }}"></label>
     <label class="span2">Текст<textarea name="body" rows="12">{{ item.body if item else '' }}</textarea></label>
-    <label>Изображение<input type="file" name="image_file" accept=".jpg,.jpeg,.png,.webp,.gif"><small>JPG, PNG, WEBP, GIF</small></label>
-    <label>или путь к встроенной картинке<input name="image" value="{{ item.image if item else '' }}" placeholder="img/pavlov.svg"></label>
-    <label>Музыка / аудио<input type="file" name="audio_file" accept=".mp3,.wav,.ogg,.m4a"><small>MP3, WAV, OGG, M4A</small></label>
+    <label>Основное изображение<input type="file" name="image_file" accept=".jpg,.jpeg,.png,.webp,.gif"><small>Выберите файл с компьютера: JPG, PNG, WEBP, GIF</small></label>
+    <label>Музыка / аудио<input type="file" name="audio_file" accept=".mp3,.wav,.ogg,.m4a"><small>Выберите файл: MP3, WAV, OGG, M4A</small></label>
+    <label class="span2">Документ / архивный файл<input type="file" name="attachment_file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.xls,.xlsx,.ppt,.pptx,.zip"><small>PDF, Word, Excel, PowerPoint, TXT, ZIP — файл будет храниться локально рядом с музеем</small></label>
     <label>Галерея изображений<input type="file" name="gallery_files" accept=".jpg,.jpeg,.png,.webp,.gif" multiple><small>Можно выбрать сразу несколько фотографий или сканов</small></label>
     <label>Порядок<input type="number" name="sort_order" value="{{ item.sort_order if item else 0 }}"></label>
     <label class="check span2"><input type="checkbox" name="featured" {% if item and item.featured %}checked{% endif %}> Показывать на главной странице</label>
     {% if item and item.audio %}<label class="check span2"><input type="checkbox" name="remove_audio"> Удалить текущую аудиозапись</label>{% endif %}
+    {% if item and item.attachment %}<label class="check span2"><input type="checkbox" name="remove_attachment"> Удалить текущий документ</label>{% endif %}
   </div>
   {% if item and item.image %}<div class="current-preview"><span>Текущее изображение</span><img src="{{ url_for('static', filename=item.image) }}" alt=""></div>{% endif %}
+  {% if item and item.audio %}<div class="current-file"><b>Текущее аудио:</b> {{ item.audio.split('/')[-1] }}</div>{% endif %}
+  {% if item and item.attachment %}<div class="current-file"><b>Текущий документ:</b> {{ item.attachment.split('/')[-1] }}</div>{% endif %}
   {% if gallery %}
   <div class="admin-gallery">
     <h3>Галерея материала</h3>
