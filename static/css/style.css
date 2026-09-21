@@ -210,3 +210,47 @@
 .home-settings-preview img{width:320px;height:420px;object-fit:contain;background:#0d1011;border:1px solid var(--line);border-radius:14px}
 .home-settings-note{color:var(--muted);line-height:1.6}
 @media(max-width:760px){.home-settings-preview{grid-template-columns:1fr}.home-settings-preview img{width:100%;height:320px}}
+
+/* Guided tour: fixed one-screen visitor mode */
+.tour-screen{height:100%;display:flex;flex-direction:column;min-height:0;padding:10px 0}
+.tour-screen-top{height:72px;min-height:72px;display:grid;grid-template-columns:150px 1fr minmax(260px,520px);align-items:center;gap:18px;border-bottom:1px solid var(--line)}
+.tour-screen-top .back{margin:0}
+.tour-title{display:flex;align-items:center;gap:18px}
+.tour-title .eyebrow{margin:0}
+.tour-title strong{color:var(--muted);font-size:14px}
+.tour-screen-top .tour-progress{margin:0;display:flex;gap:5px;justify-content:flex-end;flex-wrap:nowrap}
+.tour-screen-top .tour-progress span{height:5px;flex:1;max-width:42px}
+.tour-one-screen{flex:1;min-height:0;padding:14px 0}
+.tour-one-screen .tour-slide{height:100%;min-height:0;display:grid;grid-template-columns:48% 52%;gap:28px;align-items:stretch}
+.tour-one-screen .tour-slide[hidden]{display:none}
+.tour-image-wrap{position:relative;min-height:0;overflow:hidden;border-radius:18px;border:1px solid var(--line);background:#0d1011}
+.tour-image-wrap img{width:100%;height:100%;object-fit:contain}
+.tour-step-number{position:absolute;left:16px;top:16px;width:58px;height:58px;display:grid;place-items:center;border-radius:50%;background:#0a0d0ee8;border:1px solid #695735;color:var(--gold2);font:500 20px Georgia,serif}
+.tour-copy{min-height:0;display:flex;flex-direction:column;padding:8px 8px 4px 0}
+.tour-copy h1{font:500 clamp(40px,4vw,67px)/.98 Georgia,serif;margin:3px 0 8px}
+.tour-copy h2{font:400 22px Georgia,serif;color:#bbb7ad;margin:0 0 12px}
+.tour-text{flex:1;min-height:0;overflow:hidden;white-space:pre-wrap;font:400 19px/1.48 Georgia,serif;color:#e4dfd4}
+.tour-more{display:inline-block;align-self:flex-start;color:var(--gold2);font-weight:800;margin-top:9px;padding:8px 0}
+.tour-controls-fixed{height:62px;min-height:62px;margin:0;border-top:1px solid var(--line);align-items:flex-end}
+.tour-controls-fixed button{min-width:180px;font-size:17px}
+.tour-empty-screen{height:100%;display:grid;place-items:center;text-align:center}
+.tour-empty-screen h1{font:500 58px Georgia,serif;margin:10px 0}
+.tour-empty-screen p{color:var(--muted);font-size:19px;margin-bottom:25px}
+
+/* Guided tour administration */
+.admin-tour-list{display:flex;flex-direction:column;gap:9px;margin-top:15px}
+.admin-tour-row{display:grid;grid-template-columns:54px 84px 1fr 130px 105px;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#0e1214}
+.admin-tour-row.enabled{border-color:#5d4c2d;background:#15140f}
+.admin-tour-row>img{width:84px;height:62px;object-fit:cover;border-radius:8px}
+.admin-tour-check{display:grid!important;place-items:center;margin:0!important}
+.admin-tour-check input{width:24px!important;height:24px!important;margin:0!important}
+.admin-tour-main small,.admin-tour-main b,.admin-tour-main span{display:block}
+.admin-tour-main small{color:var(--gold);font-size:11px}
+.admin-tour-main b{font-size:18px;margin:3px 0}
+.admin-tour-main span{color:var(--muted);font-size:13px}
+.admin-tour-order input{margin:0!important;text-align:center}
+@media(max-width:900px){
+ .tour-one-screen .tour-slide{grid-template-columns:42% 58%;gap:18px}
+ .tour-screen-top{grid-template-columns:110px 1fr}.tour-screen-top .tour-progress{display:none}
+ .admin-tour-row{grid-template-columns:45px 70px 1fr 90px}.admin-tour-row>a{grid-column:3/5}
+}
