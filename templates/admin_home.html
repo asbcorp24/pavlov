@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Главная страница — админ-панель{% endblock %}
+{% block content %}
+<section class="simple-head">
+  <a class="back" href="{{ url_for('admin_dashboard') }}">← Админ-панель</a>
+  <span class="eyebrow">Настройка музея</span>
+  <h1>Главная страница</h1>
+</section>
+
+{% with messages=get_flashed_messages(with_categories=true) %}
+  {% for category,msg in messages %}
+    <div class="alert {{ category }}">{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<form class="admin-box editor" method="post" enctype="multipart/form-data">
+  <div class="form-grid">
+    <label class="span2">Надпись над заголовком
+      <input name="home_eyebrow" value="{{ settings.home_eyebrow }}">
+    </label>
+
+    <label>Заголовок
+      <input name="home_title" value="{{ settings.home_title }}">
+    </label>
+
+    <label>Годы жизни
+      <input name="home_years" value="{{ settings.home_years }}">
+    </label>
+
+    <label class="span2">Краткое описание
+      <textarea name="home_description" rows="4">{{ settings.home_description }}</textarea>
+    </label>
+
+    <label class="span2">Главная фотография / портрет
+      <input type="file" name="home_image_file" accept=".jpg,.jpeg,.png,.webp,.gif">
+      <small>Выберите изображение с компьютера. После сохранения оно сразу появится на главном экране музея.</small>
+    </label>
+
+    <label>Надпись над меню
+      <input name="home_menu_eyebrow" value="{{ settings.home_menu_eyebrow }}">
+    </label>
+
+    <label>Заголовок меню
+      <input name="home_menu_title" value="{{ settings.home_menu_title }}">
+    </label>
+  </div>
+
+  <div class="home-settings-preview">
+    <img src="{{ url_for('static', filename=settings.home_image) }}" alt="Текущее изображение">
+    <div>
+      <div class="eyebrow">{{ settings.home_eyebrow }}</div>
+      <h2 style="font:500 42px Georgia,serif;margin:8px 0">{{ settings.home_title }}</h2>
+      <div class="year">{{ settings.home_years }}</div>
+      <p class="home-settings-note">{{ settings.home_description }}</p>
+      <p class="home-settings-note">Текущий файл: <b>{{ settings.home_image.split('/')[-1] }}</b></p>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="primary" type="submit">Сохранить главную страницу</button>
+    <a class="secondary" href="{{ url_for('index') }}" target="_blank">Открыть главную</a>
+  </div>
+</form>
+{% endblock %}
