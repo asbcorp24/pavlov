@@ -3,7 +3,7 @@
 <section class="simple-head">
   <a class="back" href="{{ url_for('index') }}">← В музей</a>
   <span class="eyebrow">Управление экспозицией</span>
-  <div class="admin-title-row"><h1>Админ-панель</h1><div><a class="secondary" href="{{ url_for('admin_sections') }}">Разделы</a><a class="primary" href="{{ url_for('admin_new') }}">+ Добавить материал</a><a class="secondary" href="{{ url_for('admin_logout') }}">Выйти</a></div></div>
+  <div class="admin-title-row"><h1>Админ-панель</h1><div><a class="secondary" href="{{ url_for('admin_home') }}">Главная страница</a><a class="secondary" href="{{ url_for('admin_sections') }}">Разделы</a><a class="primary" href="{{ url_for('admin_new') }}">+ Добавить материал</a><a class="secondary" href="{{ url_for('admin_logout') }}">Выйти</a></div></div>
 </section>
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,msg in messages %}<div class="alert {{ category }}">{{ msg }}</div>{% endfor %}{% endwith %}
 <div class="admin-box">
