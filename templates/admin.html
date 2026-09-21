@@ -12,7 +12,7 @@
     <div class="admin-row">
       <img src="{{ url_for('static', filename=item.image or 'img/archive.svg') }}" alt="">
       <div class="admin-main"><small>{{ item.section_slug }}{% if item.year %} · {{ item.year }}{% endif %}</small><b>{{ item.title }}</b><span>{{ item.subtitle }}</span></div>
-      {% if item.audio %}<span class="mini-chip">♫</span>{% endif %}
+      <span class="mini-chip">{% if item.audio %}♫{% endif %}{% if item.attachment %} ▤{% endif %}</span>
       <a class="edit-btn" href="{{ url_for('admin_edit', material_id=item.id) }}">Изменить</a>
       <form method="post" action="{{ url_for('admin_delete', material_id=item.id) }}" onsubmit="return confirm('Удалить материал?')"><button class="delete-btn">Удалить</button></form>
     </div>
