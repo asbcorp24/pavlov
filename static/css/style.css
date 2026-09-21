@@ -205,3 +205,8 @@
 .document-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:9px;background:#2a2317;color:var(--gold2);font-size:22px}
 .document-button small,.document-button b{display:block}
 .document-button small{color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-size:10px}
+
+.home-settings-preview{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start;margin-top:22px}
+.home-settings-preview img{width:320px;height:420px;object-fit:contain;background:#0d1011;border:1px solid var(--line);border-radius:14px}
+.home-settings-note{color:var(--muted);line-height:1.6}
+@media(max-width:760px){.home-settings-preview{grid-template-columns:1fr}.home-settings-preview img{width:100%;height:320px}}
