@@ -157,6 +157,7 @@ def init_db():
     material_count = conn.execute("SELECT COUNT(*) n FROM materials").fetchone()["n"]
     if material_count == 0:
         seed_materials(conn)
+        conn.execute("UPDATE materials SET tour_enabled=featured, tour_order=sort_order WHERE featured=1")
 
     conn.commit()
     conn.close()
