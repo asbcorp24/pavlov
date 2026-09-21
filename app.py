@@ -105,6 +105,8 @@ def init_db():
       year TEXT DEFAULT '',
       sort_order INTEGER DEFAULT 0,
       featured INTEGER DEFAULT 0,
+      tour_enabled INTEGER DEFAULT 0,
+      tour_order INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
     CREATE TABLE IF NOT EXISTS gallery(
@@ -123,6 +125,12 @@ def init_db():
     material_columns = {row["name"] for row in conn.execute("PRAGMA table_info(materials)").fetchall()}
     if "attachment" not in material_columns:
         conn.execute("ALTER TABLE materials ADD COLUMN attachment TEXT DEFAULT ''")
+    if "tour_enabled" not in material_columns:
+        conn.execute("ALTER TABLE materials ADD COLUMN tour_enabled INTEGER DEFAULT 0")
+        conn.execute("UPDATE materials SET tour_enabled=featured WHERE featured=1")
+    if "tour_order" not in material_columns:
+        conn.execute("ALTER TABLE materials ADD COLUMN tour_order INTEGER DEFAULT 0")
+        conn.execute("UPDATE materials SET tour_order=sort_order WHERE tour_enabled=1")
 
     defaults = {
         "home_eyebrow": "Интерактивная музейная экспозиция",
@@ -371,12 +379,9 @@ def material(material_id):
 def tour():
     conn=db()
     steps=conn.execute(
-        """SELECT * FROM materials WHERE featured=1
-           ORDER BY CASE section_slug
-             WHEN 'autobiography' THEN 1 WHEN 'chronicle' THEN 2
-             WHEN 'literary-works' THEN 3 WHEN 'musical-works' THEN 4
-             WHEN 'archive' THEN 5 WHEN 'in-art' THEN 6 ELSE 7 END,
-             sort_order,id"""
+        """SELECT * FROM materials
+           WHERE tour_enabled=1
+           ORDER BY tour_order, id"""
     ).fetchall()
     conn.close()
     return render_template("tour.html",steps=steps)
@@ -448,6 +453,37 @@ def admin_home():
 
     return render_template("admin_home.html",settings=settings)
 
+@app.route("/admin/tour",methods=["GET","POST"])
+@admin_required
+def admin_tour():
+    conn=db()
+    if request.method=="POST":
+        all_items=conn.execute("SELECT id FROM materials").fetchall()
+        for row in all_items:
+            material_id=row["id"]
+            enabled=1 if request.form.get(f"enabled_{material_id}") else 0
+            try:
+                order=int(request.form.get(f"order_{material_id}") or 0)
+            except ValueError:
+                order=0
+            conn.execute(
+                "UPDATE materials SET tour_enabled=?,tour_order=? WHERE id=?",
+                (enabled,order,material_id)
+            )
+        conn.commit()
+        conn.close()
+        flash("Маршрут экскурсии сохранён","success")
+        return redirect(url_for("admin_tour"))
+
+    items=conn.execute(
+        """SELECT * FROM materials
+           ORDER BY tour_enabled DESC,
+                    CASE WHEN tour_order=0 THEN 999999 ELSE tour_order END,
+                    section_slug,sort_order,id"""
+    ).fetchall()
+    conn.close()
+    return render_template("admin_tour.html",items=items)
+
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
@@ -479,13 +515,15 @@ def admin_new():
             return redirect(request.url)
         conn=db()
         cur=conn.execute(
-            """INSERT INTO materials(section_slug,title,subtitle,body,image,audio,attachment,year,sort_order,featured)
-               VALUES(?,?,?,?,?,?,?,?,?,?)""",
+            """INSERT INTO materials(section_slug,title,subtitle,body,image,audio,attachment,year,sort_order,featured,tour_enabled,tour_order)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
             (request.form["section_slug"],request.form["title"].strip(),
              request.form.get("subtitle","").strip(),request.form.get("body","").strip(),
              image or "img/archive.svg",audio,attachment,
              request.form.get("year","").strip(),int(request.form.get("sort_order") or 0),
-             1 if request.form.get("featured") else 0)
+             1 if request.form.get("featured") else 0,
+             1 if request.form.get("tour_enabled") else 0,
+             int(request.form.get("tour_order") or 0))
         )
         try:
             add_gallery_files(conn,cur.lastrowid)
@@ -524,12 +562,14 @@ def admin_edit(material_id):
             attachment=""
         conn.execute(
             """UPDATE materials SET section_slug=?,title=?,subtitle=?,body=?,image=?,audio=?,attachment=?,
-               year=?,sort_order=?,featured=? WHERE id=?""",
+               year=?,sort_order=?,featured=?,tour_enabled=?,tour_order=? WHERE id=?""",
             (request.form["section_slug"],request.form["title"].strip(),
              request.form.get("subtitle","").strip(),request.form.get("body","").strip(),
              image,audio,attachment,request.form.get("year","").strip(),
              int(request.form.get("sort_order") or 0),
-             1 if request.form.get("featured") else 0,material_id)
+             1 if request.form.get("featured") else 0,
+             1 if request.form.get("tour_enabled") else 0,
+             int(request.form.get("tour_order") or 0),material_id)
         )
         conn.commit()
         conn.close()
